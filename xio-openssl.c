@@ -117,6 +117,7 @@ const struct optdesc opt_openssl_compress    = { "openssl-compress",   "compress
 const struct optdesc opt_openssl_fips        = { "openssl-fips",       "fips",   OPT_OPENSSL_FIPS,        GROUP_OPENSSL, PH_SPEC, TYPE_BOOL,     OFUNC_SPEC };
 #endif
 const struct optdesc opt_openssl_commonname  = { "openssl-commonname", "cn",     OPT_OPENSSL_COMMONNAME,  GROUP_OPENSSL, PH_SPEC, TYPE_STRING,   OFUNC_SPEC };
+const struct optdesc opt_openssl_snihost     = { "openssl-snihost",   "snihost", OPT_OPENSSL_SNIHOST,     GROUP_OPENSSL, PH_SPEC, TYPE_STRING,   OFUNC_SPEC };
 
 
 /* If FIPS is compiled in, we need to track if the user asked for FIPS mode.
@@ -197,6 +198,7 @@ static int
    bool opt_ver = true;	/* verify peer certificate */
    char *opt_cert = NULL;	/* file name of client certificate */
    const char *opt_commonname = NULL;	/* for checking peer certificate */
+   const char *opt_snihost = NULL;   /* for sni host */
    int result;
 
    if (!(xioflags & XIO_MAYCONVERT)) {
@@ -226,10 +228,15 @@ static int
 
    retropt_string(opts, OPT_OPENSSL_CERTIFICATE, &opt_cert);
    retropt_string(opts, OPT_OPENSSL_COMMONNAME, (char **)&opt_commonname);
+   retropt_string(opts, OPT_OPENSSL_SNIHOST, (char **)&opt_snihost);
    
    if (opt_commonname == NULL) {
       opt_commonname = hostname;
    }
+   /* could do this, but might not be desired?
+   if (opt_snihost == NULL) {
+      opt_snihost = hostname;
+   } */
 
    result =
       _xioopen_openssl_prepare(opts, xfd, false, &opt_ver, opt_cert, &ctx);
@@ -289,7 +296,7 @@ static int
 	 return result;
       }
 
-      result = _xioopen_openssl_connect(xfd, opt_ver, opt_commonname, ctx, level);
+      result = _xioopen_openssl_connect(xfd, opt_ver, opt_commonname, opt_snihost, ctx, level);
       switch (result) {
       case STAT_OK: break;
 #if WITH_RETRY
@@ -358,6 +365,7 @@ static int
 int _xioopen_openssl_connect(struct single *xfd,
 			     bool opt_ver,
 			     const char *opt_commonname,
+			     const char *opt_snihost,
 			     SSL_CTX *ctx,
 			     int level) {
    SSL *ssl;
@@ -380,6 +388,12 @@ int _xioopen_openssl_connect(struct single *xfd,
       sycSSL_free(xfd->para.openssl.ssl);
       xfd->para.openssl.ssl = NULL;
       return result;
+   }
+
+   if (opt_snihost && !SSL_set_tlsext_host_name(ssl, opt_snihost)) {
+      sycSSL_free(xfd->para.openssl.ssl);
+      xfd->para.openssl.ssl = NULL;
+      return STAT_NORETRY;
    }
 
    result = xioSSL_connect(xfd, opt_commonname, opt_ver, level);

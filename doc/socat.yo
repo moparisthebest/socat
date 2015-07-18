@@ -502,13 +502,15 @@ label(ADDRESS_OPENSSL_CONNECT)dit(bf(tt(OPENSSL:<host>:<port>)))
    link(openssl-commonname)(OPTION_OPENSSL_COMMONNAME) option.
    Socat tries to match it against the certificates subject commonName,
    and the certifications extension subjectAltName DNS names. Wildcards in the
-   certificate are supported.nl() 
+   certificate are supported. To specify the TLS SNI hostname to set use the
+   link(snihost)(OPTION_OPENSSL_SNIHOST) option.nl()
    Option groups: link(FD)(GROUP_FD),link(SOCKET)(GROUP_SOCKET),link(IP4)(GROUP_IP4),link(IP6)(GROUP_IP6),link(TCP)(GROUP_TCP),link(OPENSSL)(GROUP_OPENSSL),link(RETRY)(GROUP_RETRY) nl()
    Useful options:
    link(cipher)(OPTION_OPENSSL_CIPHERLIST),
    link(method)(OPTION_OPENSSL_METHOD),
    link(verify)(OPTION_OPENSSL_VERIFY),
-   link(commonname)(OPTION_OPENSSL_COMMONNAME)
+   link(commonname)(OPTION_OPENSSL_COMMONNAME),
+   link(snihost)(OPTION_OPENSSL_SNIHOST),
    link(cafile)(OPTION_OPENSSL_CAFILE),
    link(capath)(OPTION_OPENSSL_CAPATH),
    link(certificate)(OPTION_OPENSSL_CERTIFICATE),
@@ -2700,6 +2702,9 @@ label(OPTION_OPENSSL_COMMONNAME)dit(bf(tt(commonname=<string>)))
    certificates commonname. This option has only meaning when option
    link(verify)(OPTION_OPENSSL_VERIFY) is not disabled and the choosen cipher
    provides a peer certificate.
+label(OPTION_OPENSSL_SNIHOST)dit(bf(tt(snihost=<string>)))
+   Specify the SNI hostname for the TLS request. The server can use this TLS
+   extension to choose which certificate to send.
 label(OPTION_OPENSSL_FIPS)dit(bf(tt(fips)))
    Enables FIPS mode if compiled in. For info about the FIPS encryption
    implementation standard see lurl(http://oss-institute.org/fips-faq.html). 
